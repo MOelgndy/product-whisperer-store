@@ -1,11 +1,20 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ShoppingCart, Search, Menu, X, User } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, User, LogOut } from "lucide-react";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from '@/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   cartItemCount?: number;
@@ -15,6 +24,8 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { user, signOut, isLoading } = useAuth();
+  const navigate = useNavigate();
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -22,6 +33,11 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
     e.preventDefault();
     console.log('Searching for:', searchQuery);
     // In a real app, this would trigger a search
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
   return (
@@ -59,6 +75,11 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
                 <li><Link to="/products" className="block p-2 hover:bg-gray-100 rounded-md">Products</Link></li>
                 <li><Link to="/import" className="block p-2 hover:bg-gray-100 rounded-md">Import Products</Link></li>
                 <li><Link to="/dashboard" className="block p-2 hover:bg-gray-100 rounded-md">Dashboard</Link></li>
+                {user ? (
+                  <li><button onClick={handleSignOut} className="w-full text-left block p-2 hover:bg-gray-100 rounded-md">Sign Out</button></li>
+                ) : (
+                  <li><Link to="/login" className="block p-2 hover:bg-gray-100 rounded-md">Login</Link></li>
+                )}
               </ul>
             </nav>
           )}
@@ -83,11 +104,34 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
             </Button>
           </Link>
           
-          <Link to="/login">
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
-          </Link>
+          {!isLoading && (
+            user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{user.name || user.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/login">
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            )
+          )}
         </div>
       </div>
     </header>
