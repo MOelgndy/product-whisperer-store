@@ -6,10 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { Search, ShoppingCart, Loader2 } from 'lucide-react';
+import { useProducts } from '@/hooks/useProducts';
+import { importProductByUrl, searchProducts } from '@/services/productImport';
 
 export default function ImportForm() {
   const { toast } = useToast();
+  const { addProduct } = useProducts();
   const [isLoading, setIsLoading] = useState(false);
   const [source, setSource] = useState<'amazon' | 'alibaba'>('amazon');
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,27 +34,48 @@ export default function ImportForm() {
     setIsLoading(true);
     
     try {
-      // This would normally connect to a backend API to search products
-      toast({
-        title: "Feature Note",
-        description: "This feature requires Supabase integration to connect to external APIs.",
-      });
-      
-      console.log('Searching for products', {
-        source,
-        searchTerm,
-        productUrl,
-        markupPercentage
-      });
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-    } catch (error) {
-      console.error('Error searching products:', error);
+      if (searchTerm) {
+        // Search products
+        const results = await searchProducts(searchTerm, source, markupPercentage);
+        
+        if (results.length > 0 && results[0].success) {
+          toast({
+            title: "Success",
+            description: `Found ${results.length} products from ${source}`,
+          });
+          
+          // Here you would typically display the results
+          console.log('Search results:', results);
+        } else {
+          toast({
+            title: "Error",
+            description: results[0].error || "No products found",
+            variant: "destructive",
+          });
+        }
+      } else if (productUrl) {
+        // Import single product
+        const result = await importProductByUrl(productUrl, source);
+        
+        if (result.success && result.product) {
+          addProduct(result.product);
+          toast({
+            title: "Success",
+            description: `Imported ${result.product.title} from ${source}`,
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: result.error || "Failed to import product",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('Error:', error);
       toast({
         title: "Error",
-        description: "Failed to search for products. Please try again.",
+        description: error.message || "Failed to process request",
         variant: "destructive",
       });
     } finally {
@@ -87,7 +111,7 @@ export default function ImportForm() {
                     className="flex-1"
                   />
                   <Button type="submit" disabled={isLoading}>
-                    <Search className="h-4 w-4 mr-2" />
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
                     Search
                   </Button>
                 </div>
@@ -113,7 +137,7 @@ export default function ImportForm() {
                     className="flex-1"
                   />
                   <Button type="submit" variant="outline" disabled={isLoading}>
-                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ShoppingCart className="h-4 w-4 mr-2" />}
                     Import
                   </Button>
                 </div>
@@ -139,10 +163,9 @@ export default function ImportForm() {
         </Tabs>
       </CardContent>
       <CardFooter className="flex items-center border-t pt-4">
-        <div className="flex items-center text-sm text-amber-600">
-          <AlertTriangle className="h-4 w-4 mr-2" />
-          <span>This feature requires Supabase integration for API access.</span>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Connected to Supabase backend for API access.
+        </p>
       </CardFooter>
     </Card>
   );
