@@ -31,7 +31,9 @@ export async function isAuthenticated() {
 // Helper function to check if we have valid Supabase credentials
 export function hasValidSupabaseConfig() {
   return import.meta.env.VITE_SUPABASE_URL && 
+         import.meta.env.VITE_SUPABASE_URL !== 'https://placeholder-supabase-url.supabase.co' &&
          import.meta.env.VITE_SUPABASE_URL.includes('.supabase.co') && 
          import.meta.env.VITE_SUPABASE_ANON_KEY && 
+         import.meta.env.VITE_SUPABASE_ANON_KEY !== 'placeholder-anon-key' &&
          import.meta.env.VITE_SUPABASE_ANON_KEY.length > 20;
 }
