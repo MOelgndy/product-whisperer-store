@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Download, FileExport } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import { Product } from '@/types/product';
@@ -204,7 +204,7 @@ export default function ExportProducts() {
             <>Exporting...</>
           ) : (
             <>
-              <FileExport className="mr-2 h-4 w-4" />
+              <FileText className="mr-2 h-4 w-4" />
               Export {selectedProducts.length} Products
             </>
           )}
