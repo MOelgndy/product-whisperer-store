@@ -2,12 +2,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Download, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
-import { Product } from '@/types/product';
+import { downloadExportFile, productsToCSV, productsToJSON } from '@/utils/exportUtils';
+import { ExportFormatSelector } from './export/ExportFormatSelector';
+import { ProductSelectionList } from './export/ProductSelectionList';
 
 export default function ExportProducts() {
   const { toast } = useToast();
@@ -52,47 +52,16 @@ export default function ExportProducts() {
       }
       
       let exportData: string;
-      let fileName: string;
       
       // Format data based on selected export format
       if (exportFormat === 'csv') {
-        // Create CSV data
-        const headers = ['id', 'title', 'description', 'originalPrice', 'price', 'source', 'category', 'inStock'];
-        const csvRows = [
-          headers.join(','),
-          ...dataToExport.map(product => {
-            return [
-              product.id,
-              `"${product.title.replace(/"/g, '""')}"`,
-              `"${product.description.replace(/"/g, '""')}"`,
-              product.originalPrice,
-              product.price || '',
-              product.source,
-              product.category || '',
-              product.inStock
-            ].join(',');
-          })
-        ];
-        
-        exportData = csvRows.join('\n');
-        fileName = `products_export_${new Date().toISOString().split('T')[0]}.csv`;
+        exportData = productsToCSV(dataToExport);
       } else {
-        // Create JSON data
-        exportData = JSON.stringify(dataToExport, null, 2);
-        fileName = `products_export_${new Date().toISOString().split('T')[0]}.json`;
+        exportData = productsToJSON(dataToExport);
       }
       
-      // Create download link
-      const blob = new Blob([exportData], { type: exportFormat === 'csv' ? 'text/csv' : 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      
-      // Clean up
-      URL.revokeObjectURL(url);
+      // Download the file
+      downloadExportFile(exportData, exportFormat);
       
       toast({
         title: "Export Successful",
@@ -120,34 +89,13 @@ export default function ExportProducts() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex-1">
-              <label htmlFor="export-format" className="text-sm font-medium block mb-1">Export Format</label>
-              <Select
-                value={exportFormat}
-                onValueChange={(value) => setExportFormat(value as 'csv' | 'json')}
-              >
-                <SelectTrigger id="export-format" className="w-full">
-                  <SelectValue placeholder="Select format" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="csv">CSV (Excel, Google Sheets)</SelectItem>
-                  <SelectItem value="json">JSON (Technical)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex-1">
-              <label className="text-sm font-medium block mb-1">Actions</label>
-              <Button
-                variant="outline" 
-                className="w-full"
-                onClick={handleSelectAll}
-              >
-                {selectedProducts.length === products.length ? 'Deselect All' : 'Select All Products'}
-              </Button>
-            </div>
-          </div>
+          <ExportFormatSelector 
+            exportFormat={exportFormat}
+            onFormatChange={setExportFormat}
+            onSelectAll={handleSelectAll}
+            allSelected={selectedProducts.length === products.length}
+            productsCount={products.length}
+          />
           
           <div className="border rounded-md">
             <div className="p-3 border-b bg-muted/50">
@@ -159,36 +107,12 @@ export default function ExportProducts() {
               </div>
             </div>
             
-            <div className="max-h-64 overflow-y-auto">
-              {isLoading ? (
-                <div className="p-4 text-center">Loading products...</div>
-              ) : products.length === 0 ? (
-                <div className="p-4 text-center">No products available to export.</div>
-              ) : (
-                products.map(product => (
-                  <div 
-                    key={product.id} 
-                    className="grid grid-cols-12 gap-4 p-3 border-b hover:bg-gray-50 last:border-0 items-center text-sm"
-                  >
-                    <div className="col-span-1">
-                      <Checkbox 
-                        checked={selectedProducts.includes(product.id)}
-                        onCheckedChange={() => handleSelectProduct(product.id)}
-                      />
-                    </div>
-                    <div className="col-span-7 truncate" title={product.title}>
-                      {product.title}
-                    </div>
-                    <div className="col-span-2">
-                      ${(product.price || product.originalPrice).toFixed(2)}
-                    </div>
-                    <div className="col-span-2 capitalize">
-                      {product.source}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            <ProductSelectionList
+              products={products}
+              selectedProducts={selectedProducts}
+              isLoading={isLoading}
+              onSelectProduct={handleSelectProduct}
+            />
           </div>
         </div>
       </CardContent>
