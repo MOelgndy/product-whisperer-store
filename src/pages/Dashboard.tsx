@@ -23,10 +23,14 @@ export default function Dashboard() {
           </div>
           
           <div className="flex gap-3">
-            <Button as={Link} to="/import">Import New Products</Button>
-            <Button variant="outline" as={Link} to="/import?tab=export">
-              <FileText className="mr-2 h-4 w-4" />
-              Export Products
+            <Button asChild>
+              <Link to="/import">Import New Products</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/import?tab=export">
+                <FileText className="mr-2 h-4 w-4" />
+                Export Products
+              </Link>
             </Button>
           </div>
         </div>
