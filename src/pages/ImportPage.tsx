@@ -1,4 +1,6 @@
 
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ImportForm from '@/components/ImportForm';
@@ -8,6 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ImportPage() {
   const { cartItems } = useCart();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  
+  // Set default tab value based on URL parameter
+  const defaultTab = tabParam === 'export' ? 'export' : 'import';
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -20,7 +27,7 @@ export default function ImportPage() {
         </div>
         
         <div className="max-w-3xl mb-10">
-          <Tabs defaultValue="import" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="import">Import Products</TabsTrigger>
               <TabsTrigger value="export">Export Products</TabsTrigger>

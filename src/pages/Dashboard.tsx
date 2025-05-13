@@ -4,8 +4,9 @@ import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, DollarSign, Package, Activity, TrendingUp, TrendingDown } from 'lucide-react';
+import { ShoppingBag, DollarSign, Package, Activity, TrendingUp, TrendingDown, FileText } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const { cartItems } = useCart();
@@ -21,7 +22,13 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Manage your products and monitor performance</p>
           </div>
           
-          <Button>Import New Products</Button>
+          <div className="flex gap-3">
+            <Button as={Link} to="/import">Import New Products</Button>
+            <Button variant="outline" as={Link} to="/import?tab=export">
+              <FileText className="mr-2 h-4 w-4" />
+              Export Products
+            </Button>
+          </div>
         </div>
         
         {/* Dashboard Stats */}
