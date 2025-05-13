@@ -5,14 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
-import { downloadExportFile, productsToCSV, productsToJSON } from '@/utils/exportUtils';
+import { downloadExportFile, exportFormatMap, ExportFormat } from '@/utils/exportUtils';
 import { ExportFormatSelector } from './export/ExportFormatSelector';
 import { ProductSelectionList } from './export/ProductSelectionList';
 
 export default function ExportProducts() {
   const { toast } = useToast();
   const { products, isLoading } = useProducts();
-  const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('csv');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -51,21 +51,30 @@ export default function ExportProducts() {
         return;
       }
       
-      let exportData: string;
+      // Get the appropriate export function based on format
+      const exportFunction = exportFormatMap[exportFormat];
+      
+      if (!exportFunction) {
+        throw new Error(`Export format ${exportFormat} not supported`);
+      }
       
       // Format data based on selected export format
-      if (exportFormat === 'csv') {
-        exportData = productsToCSV(dataToExport);
-      } else {
-        exportData = productsToJSON(dataToExport);
-      }
+      const exportData = exportFunction(dataToExport);
       
       // Download the file
       downloadExportFile(exportData, exportFormat);
       
+      // Format name for toast
+      const formatDisplayName = {
+        csv: 'CSV',
+        json: 'JSON',
+        amazon: 'Amazon Marketplace',
+        marketplace: 'Other Marketplaces'
+      }[exportFormat];
+      
       toast({
         title: "Export Successful",
-        description: `Successfully exported ${dataToExport.length} products as ${exportFormat.toUpperCase()}.`,
+        description: `Successfully exported ${dataToExport.length} products for ${formatDisplayName}.`,
       });
     } catch (error) {
       console.error("Export error:", error);
@@ -84,7 +93,7 @@ export default function ExportProducts() {
       <CardHeader>
         <CardTitle>Export Products</CardTitle>
         <CardDescription>
-          Select products to export for your online stores
+          Export products to various platforms and formats
         </CardDescription>
       </CardHeader>
       <CardContent>
