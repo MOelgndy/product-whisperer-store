@@ -2,7 +2,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ExportFormat } from '@/utils/exportUtils';
-import { Store, FileText, Amazon, Import } from 'lucide-react';
+import { Store, FileText, FileUp, Import } from 'lucide-react';
 
 interface ExportFormatSelectorProps {
   exportFormat: ExportFormat;
@@ -46,7 +46,7 @@ export const ExportFormatSelector = ({
               </SelectItem>
               <SelectItem value="amazon">
                 <div className="flex items-center">
-                  <Amazon className="w-4 h-4 mr-2" />
+                  <FileUp className="w-4 h-4 mr-2" />
                   <span>Amazon Marketplace</span>
                 </div>
               </SelectItem>
